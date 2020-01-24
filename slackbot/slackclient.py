@@ -79,7 +79,7 @@ class SlackClient(object):
     def send_to_websocket(self, data):
         """Send (data) directly to the websocket."""
         data = json.dumps(data)
-        self.websocket.send(data)
+        return self.websocket.send(data)
 
     def ping(self):
         return self.send_to_websocket({'type': 'ping'})
@@ -92,7 +92,8 @@ class SlackClient(object):
                 data += '{0}\n'.format(self.websocket.recv())
             except WebSocketException as e:
                 if isinstance(e, WebSocketConnectionClosedException):
-                    logger.warning('lost websocket connection, try to reconnect now')
+                    logger.warning(
+                        'lost websocket connection, try to reconnect now')
                 else:
                     logger.warning('websocket exception: %s', e)
                 self.reconnect()
@@ -118,33 +119,33 @@ class SlackClient(object):
             'text': message,
             'attachments': attachments,
             'thread_ts': thread_ts,
-            }
-        self.send_to_websocket(message_json)
+        }
+        return self.send_to_websocket(message_json)
 
     def upload_file(self, channel, fname, fpath, comment):
         fname = fname or to_utf8(os.path.basename(fpath))
-        self.webapi.files.upload(fpath,
-                                 channels=channel,
-                                 filename=fname,
-                                 initial_comment=comment)
+        return self.webapi.files.upload(fpath,
+                                        channels=channel,
+                                        filename=fname,
+                                        initial_comment=comment)
 
     def upload_content(self, channel, fname, content, comment):
-        self.webapi.files.upload(None,
-                                 channels=channel,
-                                 content=content,
-                                 filename=fname,
-                                 initial_comment=comment)
+        return self.webapi.files.upload(None,
+                                        channels=channel,
+                                        content=content,
+                                        filename=fname,
+                                        initial_comment=comment)
 
     def send_message(self, channel, message, attachments=None, as_user=True, thread_ts=None):
-        self.webapi.chat.post_message(
-                channel,
-                message,
-                username=self.login_data['self']['name'],
-                icon_url=self.bot_icon,
-                icon_emoji=self.bot_emoji,
-                attachments=attachments,
-                as_user=as_user,
-                thread_ts=thread_ts)
+        return self.webapi.chat.post_message(
+            channel,
+            message,
+            username=self.login_data['self']['name'],
+            icon_url=self.bot_icon,
+            icon_emoji=self.bot_emoji,
+            attachments=attachments,
+            as_user=as_user,
+            thread_ts=thread_ts)
 
     def get_channel(self, channel_id):
         return Channel(self, self.channels[channel_id])
@@ -170,7 +171,7 @@ class SlackClient(object):
                 return userid
 
     def react_to_message(self, emojiname, channel, timestamp):
-        self.webapi.reactions.add(
+        return self.webapi.reactions.add(
             name=emojiname,
             channel=channel,
             timestamp=timestamp)
@@ -191,7 +192,7 @@ class Channel(object):
         return name == compare_str or "#" + name == compare_str or cid == compare_str
 
     def upload_file(self, fname, fpath, initial_comment=''):
-        self._client.upload_file(
+        return self._client.upload_file(
             self._body['id'],
             to_utf8(fname),
             to_utf8(fpath),
@@ -199,7 +200,7 @@ class Channel(object):
         )
 
     def upload_content(self, fname, content, initial_comment=''):
-        self._client.upload_content(
+        return self._client.upload_content(
             self._body['id'],
             to_utf8(fname),
             to_utf8(content),
